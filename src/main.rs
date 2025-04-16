@@ -1,3 +1,4 @@
+mod vec3;
 use log::info;
 
 fn main() {
