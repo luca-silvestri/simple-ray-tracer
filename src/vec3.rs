@@ -80,6 +80,8 @@ impl Neg for Vec3 {
     }
 }
 
+pub type Point3 = Vec3;
+
 #[cfg(test)]
 mod tests {
     use super::*; // Import everything from the parent module
