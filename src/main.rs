@@ -10,18 +10,26 @@ use color::{Color, write_color};
 use ray::Ray;
 use vec3::{Point3, Vec3};
 
-fn hit_sphere(center: &Point3, radius: f64, ray: &Ray) -> bool {
+fn hit_sphere(center: &Point3, radius: f64, ray: &Ray) -> f64 {
     let oc: Vec3 = *center - *ray.origin();
     let a = ray.direction().length_squared();
     let b = -2.0 * ray.direction().dot(&oc);
     let c = oc.length_squared() - radius * radius;
     let discriminant = b * b - 4.0 * a * c;
-    return discriminant >= 0.0;
+    let t = if discriminant < 0.0 {
+        -1.0
+    } else {
+        (-b - discriminant.sqrt()) / (2.0 * a)
+    };
+    return t;
 }
 
 fn ray_color(ray: &Ray) -> Color {
-    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, ray) {
-        return Color::new(1.0, 0.0, 0.0);
+    let center = Point3::new(0.0, 0.0, -1.0);
+    let t = hit_sphere(&center, 0.5, ray);
+    if t > 0.0 {
+        let normal = (ray.at(t) - center).unit_vector();
+        return 0.5 * Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0);
     }
     let unit_direction = ray.direction().unit_vector();
     let a = 0.5 * (unit_direction.y + 1.0);
