@@ -1,4 +1,8 @@
+use log::info;
+
 fn main() {
+    env_logger::init();
+
     // Image
     //
     let image_width: i16 = 256;
@@ -9,6 +13,7 @@ fn main() {
     print!("P3\n{image_width} {image_height}\n255\n");
 
     for j in 0..image_height {
+        info!("Scanlines remaining: {}", image_height - j);
         for i in 0..image_width {
             let r: f64 = (i as f64) / ((image_width - 1) as f64);
             let g: f64 = (j as f64) / ((image_height - 1) as f64);
@@ -21,4 +26,5 @@ fn main() {
             print!("{ir} {ig} {ib}\n")
         }
     }
+    info!("Done.");
 }
