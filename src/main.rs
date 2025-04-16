@@ -1,8 +1,16 @@
+mod color;
 mod vec3;
+
+use std::io;
+
 use log::info;
+
+use color::{Color, write_color};
 
 fn main() {
     env_logger::init();
+    let stdout = io::stdout();
+    let mut out = stdout.lock();
 
     // Image
     //
@@ -16,15 +24,13 @@ fn main() {
     for j in 0..image_height {
         info!("Scanlines remaining: {}", image_height - j);
         for i in 0..image_width {
-            let r: f64 = (i as f64) / ((image_width - 1) as f64);
-            let g: f64 = (j as f64) / ((image_height - 1) as f64);
-            let b: f64 = 0.0;
+            let pixel = Color::new(
+                (i as f64) / ((image_width - 1) as f64),
+                (j as f64) / ((image_height - 1) as f64),
+                0.0,
+            );
 
-            let ir: i16 = (255.999 * r) as i16;
-            let ig: i16 = (255.999 * g) as i16;
-            let ib: i16 = (255.999 * b) as i16;
-
-            print!("{ir} {ig} {ib}\n")
+            write_color(&mut out, &pixel).unwrap();
         }
     }
     info!("Done.");
