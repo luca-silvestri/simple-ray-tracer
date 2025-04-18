@@ -19,7 +19,7 @@ impl Ray {
         &self.direction
     }
 
-    pub fn at(self, scalar: f64) -> Point3 {
+    pub fn at(&self, scalar: f64) -> Point3 {
         self.origin + scalar * self.direction
     }
 }

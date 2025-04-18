@@ -1,5 +1,7 @@
 mod color;
+mod hittable;
 mod ray;
+mod sphere;
 mod vec3;
 
 use std::io;
@@ -17,10 +19,10 @@ fn hit_sphere(center: &Point3, radius: f64, ray: &Ray) -> f64 {
     let c = oc.length_squared() - radius * radius;
     let discriminant = h * h - a * c;
     if discriminant < 0.0 {
-        return -1.0;
+        -1.0
     } else {
-        return (h - discriminant.sqrt()) / a;
-    };
+        (h - discriminant.sqrt()) / a
+    }
 }
 
 fn ray_color(ray: &Ray) -> Color {
