@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::hittable::{HitRecord, Hittable};
+use crate::interval::Interval;
 use crate::ray::Ray;
 
 pub struct HittableList {
@@ -24,13 +25,13 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, ray: &Ray, tmin: f64, tmax: f64, record: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, interval: Interval, record: &mut HitRecord) -> bool {
         let mut temp: HitRecord = HitRecord::default();
         let mut hit_anything = false;
-        let mut closest_so_far = tmax;
+        let mut closest_so_far = interval.max;
 
         for object in &self.objects {
-            if object.hit(ray, tmin, closest_so_far, &mut temp) {
+            if object.hit(ray, Interval::new(interval.min, closest_so_far), &mut temp) {
                 hit_anything = true;
                 closest_so_far = temp.t;
                 *record = temp;
@@ -52,10 +53,8 @@ mod tests {
         let sphere = Arc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5));
         world.add(sphere);
         let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
-        let tmin = 0.001;
-        let tmax = f64::INFINITY;
         let mut record = HitRecord::default();
-        let hit = world.hit(&ray, tmin, tmax, &mut record);
+        let hit = world.hit(&ray, Interval::new(0.001, f64::INFINITY), &mut record);
         assert!(hit, "Ray should hit the sphere in the world");
         assert!(
             (record.t - 0.5).abs() < 1e-6,
@@ -76,7 +75,7 @@ mod tests {
         world.add(sphere);
         let ray = Ray::new(Point3::new(0.0, 2.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
         let mut record = HitRecord::default();
-        let hit = world.hit(&ray, 0.001, f64::INFINITY, &mut record);
+        let hit = world.hit(&ray, Interval::new(0.001, f64::INFINITY), &mut record);
         assert!(!hit, "Ray should miss all objects in the world");
     }
 }

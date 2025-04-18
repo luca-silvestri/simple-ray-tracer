@@ -1,6 +1,7 @@
 mod color;
 mod hittable;
 mod hittable_list;
+mod interval;
 mod ray;
 mod sphere;
 mod vec3;
@@ -8,6 +9,7 @@ mod vec3;
 use core::f64;
 use std::{io, sync::Arc};
 
+use interval::Interval;
 use log::info;
 
 use color::{Color, write_color};
@@ -19,7 +21,7 @@ use vec3::{Point3, Vec3};
 
 fn ray_color(ray: &Ray, world: &dyn Hittable) -> Color {
     let mut record = HitRecord::default();
-    if world.hit(ray, 0.0, f64::INFINITY, &mut record) {
+    if world.hit(ray, Interval::new(0.0, f64::INFINITY), &mut record) {
         return 0.5 * (record.normal + Color::new(1.0, 1.0, 1.0));
     }
     let unit_direction = ray.direction().unit_vector();

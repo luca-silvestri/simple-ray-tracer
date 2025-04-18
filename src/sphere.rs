@@ -1,4 +1,5 @@
 use crate::hittable::{HitRecord, Hittable};
+use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
 
@@ -18,7 +19,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, tmin: f64, tmax: f64, record: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, interval: Interval, record: &mut HitRecord) -> bool {
         let oc: Vec3 = self.center - *ray.origin();
         let a = ray.direction().length_squared();
         let h = ray.direction().dot(&oc);
@@ -30,9 +31,9 @@ impl Hittable for Sphere {
 
         let sqrtd = discriminant.sqrt();
         let root = (h - sqrtd) / a;
-        if root <= tmin || root >= tmax {
+        if !interval.surrounds(root) {
             let root = (h + sqrtd) / a;
-            if root <= tmin || root >= tmax {
+            if !interval.surrounds(root) {
                 return false;
             }
         }
@@ -48,6 +49,8 @@ impl Hittable for Sphere {
 
 #[cfg(test)]
 mod tests {
+    use core::f64;
+
     use super::*;
 
     #[test]
@@ -73,12 +76,9 @@ mod tests {
         let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
 
         let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
-
-        let tmin = 0.001;
-        let tmax = f64::INFINITY;
+        let interval = Interval::new(0.001, f64::INFINITY);
         let mut record = HitRecord::default();
-
-        let hit = sphere.hit(&ray, tmin, tmax, &mut record);
+        let hit = sphere.hit(&ray, interval, &mut record);
 
         assert!(hit, "Ray should hit the sphere");
         assert!(
@@ -103,12 +103,9 @@ mod tests {
         let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
 
         let ray = Ray::new(Point3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
-
-        let tmin = 0.001;
-        let tmax = f64::INFINITY;
+        let interval = Interval::new(0.001, f64::INFINITY);
         let mut record = HitRecord::default();
-
-        let hit = sphere.hit(&ray, tmin, tmax, &mut record);
+        let hit = sphere.hit(&ray, interval, &mut record);
 
         assert!(!hit, "Ray should miss the sphere");
     }
