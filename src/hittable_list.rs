@@ -45,7 +45,11 @@ impl Hittable for HittableList {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Vec3, ray::Ray, sphere::Sphere, vec3::Point3};
+    use crate::{
+        ray::Ray,
+        sphere::Sphere,
+        vec3::{Point3, Vec3},
+    };
 
     #[test]
     fn test_ray_hits_one_sphere_in_list() {
