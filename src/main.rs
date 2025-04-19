@@ -21,6 +21,7 @@ fn main() {
 
     let aspect_ratio: f64 = 16.0 / 9.0;
     let image_width: i32 = 400;
-    let camera = Camera::new(aspect_ratio, image_width);
+    let samples_per_pixel: i32 = 100;
+    let camera = Camera::new(aspect_ratio, image_width, samples_per_pixel);
     camera.render(&world, &mut io::stdout());
 }

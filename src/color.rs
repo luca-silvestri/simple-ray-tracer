@@ -1,5 +1,6 @@
 use std::io::{self, Write};
 
+use crate::interval::Interval;
 use crate::vec3::Vec3;
 
 pub type Color = Vec3;
@@ -9,9 +10,10 @@ pub fn write_color<W: Write>(out: &mut W, pixel: &Color) -> io::Result<()> {
     let g = pixel.y;
     let b = pixel.z;
 
-    let rbyte = (255.999 * r) as i16;
-    let gbyte = (255.999 * g) as i16;
-    let bbyte = (255.999 * b) as i16;
+    let intensity = Interval::new(0.000, 0.999);
+    let rbyte = (255.999 * intensity.clamp(r)) as i16;
+    let gbyte = (255.999 * intensity.clamp(g)) as i16;
+    let bbyte = (255.999 * intensity.clamp(b)) as i16;
 
     write!(out, "{rbyte} {gbyte} {bbyte}\n")?;
 

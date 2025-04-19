@@ -1,5 +1,7 @@
 use std::io::Write;
 
+use rand::Rng;
+
 use crate::{
     color::{Color, write_color},
     hittable::{HitRecord, Hittable},
@@ -11,6 +13,7 @@ use crate::{
 pub struct Camera {
     pub aspect_ratio: f64,
     pub image_width: i32,
+    pub samples_per_pixel: i32,
     image_height: i32,
     center: Point3,
     pixel00_loc: Point3,
@@ -19,10 +22,11 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: i32) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: i32, samples_per_pixel: i32) -> Self {
         let mut camera = Camera {
             aspect_ratio,
             image_width,
+            samples_per_pixel,
             image_height: 0,
             center: Point3::default(),
             pixel00_loc: Point3::default(),
@@ -61,22 +65,43 @@ impl Camera {
         for j in 0..self.image_height {
             eprintln!("Scanlines remaining: {}", self.image_height - j);
             for i in 0..self.image_width {
-                let pixel_center = self.pixel00_loc
-                    + self.pixel_delta_u * i as f64
-                    + self.pixel_delta_v * j as f64;
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_direction);
-                let pixel_color = self.ray_color(&ray, world);
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                for _ in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(i, j);
+                    pixel_color = pixel_color + self.ray_color(&ray, world);
+                }
+                pixel_color = pixel_color / self.samples_per_pixel as f64;
                 write_color(out, &pixel_color);
+                // let pixel_center = self.pixel00_loc
+                //     + self.pixel_delta_u * i as f64
+                //     + self.pixel_delta_v * j as f64;
+                // let ray_direction = pixel_center - self.center;
+                // let ray = Ray::new(self.center, ray_direction);
+                // let pixel_color = self.ray_color(&ray, world);
+                // write_color(out, &pixel_color);
             }
         }
         eprintln!("Done.")
     }
 
+    fn get_ray(&self, i: i32, j: i32) -> Ray {
+        let mut rng = rand::rng();
+        let offset = Vec3::new(
+            rng.random_range(-0.5..0.5),
+            rng.random_range(-0.5..0.5),
+            0.0,
+        );
+        let pixel_sample = self.pixel00_loc
+            + (i as f64 + offset.x) * self.pixel_delta_u
+            + (j as f64 + offset.y) * self.pixel_delta_v;
+        return Ray::new(self.center, pixel_sample - self.center);
+    }
+
     fn ray_color(&self, ray: &Ray, world: &impl Hittable) -> Color {
         let mut record = HitRecord::default();
         if world.hit(ray, Interval::new(0.0, f64::INFINITY), &mut record) {
-            return 0.5 * (record.normal + Color::new(1.0, 1.0, 1.0));
+            let direction = Vec3::random_on_hemisphere(&record.normal);
+            return 0.5 * self.ray_color(&Ray::new(record.point, direction), world);
         }
         let unit_direction = ray.direction().unit_vector();
         let a = 0.5 * (unit_direction.y + 1.0);
