@@ -14,6 +14,7 @@ pub struct Camera {
     pub aspect_ratio: f64,
     pub image_width: i32,
     pub samples_per_pixel: i32,
+    pub max_depth: i32,
     image_height: i32,
     center: Point3,
     pixel00_loc: Point3,
@@ -22,11 +23,17 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: i32, samples_per_pixel: i32) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: i32,
+        samples_per_pixel: i32,
+        max_depth: i32,
+    ) -> Self {
         let mut camera = Camera {
             aspect_ratio,
             image_width,
             samples_per_pixel,
+            max_depth,
             image_height: 0,
             center: Point3::default(),
             pixel00_loc: Point3::default(),
@@ -68,7 +75,7 @@ impl Camera {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(i, j);
-                    pixel_color = pixel_color + self.ray_color(&ray, world);
+                    pixel_color = pixel_color + self.ray_color(&ray, self.max_depth, world);
                 }
                 pixel_color = pixel_color / self.samples_per_pixel as f64;
                 write_color(out, &pixel_color);
@@ -97,11 +104,14 @@ impl Camera {
         return Ray::new(self.center, pixel_sample - self.center);
     }
 
-    fn ray_color(&self, ray: &Ray, world: &impl Hittable) -> Color {
+    fn ray_color(&self, ray: &Ray, depth: i32, world: &impl Hittable) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
         let mut record = HitRecord::default();
-        if world.hit(ray, Interval::new(0.0, f64::INFINITY), &mut record) {
-            let direction = Vec3::random_on_hemisphere(&record.normal);
-            return 0.5 * self.ray_color(&Ray::new(record.point, direction), world);
+        if world.hit(ray, Interval::new(0.001, f64::INFINITY), &mut record) {
+            let direction = record.normal + Vec3::random_unit_vector();
+            return 0.5 * self.ray_color(&Ray::new(record.point, direction), depth - 1, world);
         }
         let unit_direction = ray.direction().unit_vector();
         let a = 0.5 * (unit_direction.y + 1.0);
