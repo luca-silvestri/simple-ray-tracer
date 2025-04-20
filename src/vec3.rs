@@ -22,6 +22,10 @@ impl Vec3 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
+    pub fn near_zero(&self) -> bool {
+        self.x.abs() < 1e-8 && self.y.abs() < 1e-8 && self.z.abs() < 1e-8
+    }
+
     pub fn dot(&self, other: &Vec3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
@@ -65,6 +69,10 @@ impl Vec3 {
             return -on_unit_sphere;
         }
     }
+
+    pub fn reflect(incident: &Vec3, normal: &Vec3) -> Vec3 {
+        *incident - 2.0 * incident.dot(&normal) * *normal
+    }
 }
 
 // Operator overloading
@@ -99,6 +107,14 @@ impl Mul<f64> for Vec3 {
 
     fn mul(self, scalar: f64) -> Vec3 {
         Vec3::new(self.x * scalar, self.y * scalar, self.z * scalar)
+    }
+}
+
+impl Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, other: Vec3) -> Vec3 {
+        Vec3::new(self.x * other.x, self.y * other.y, self.z * other.z)
     }
 }
 

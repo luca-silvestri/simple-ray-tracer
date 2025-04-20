@@ -1,20 +1,31 @@
+use std::sync::Arc;
+
 use crate::interval::Interval;
+use crate::material::{Lambertian, Material};
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone)]
 pub struct HitRecord {
     pub point: Point3,
     pub normal: Vec3,
+    pub material: Arc<dyn Material>,
     pub t: f64,
     pub front_face: bool,
 }
 
 impl HitRecord {
-    pub fn new(point: Point3, normal: Vec3, t: f64, front_face: bool) -> Self {
+    pub fn new(
+        point: Point3,
+        normal: Vec3,
+        material: Arc<dyn Material>,
+        t: f64,
+        front_face: bool,
+    ) -> Self {
         HitRecord {
             point,
             normal,
+            material,
             t,
             front_face,
         }
@@ -31,6 +42,7 @@ impl Default for HitRecord {
         HitRecord {
             point: Point3::default(),
             normal: Point3::default(),
+            material: Arc::new(Lambertian::default()),
             t: 0.0,
             front_face: false,
         }
@@ -38,7 +50,7 @@ impl Default for HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, interval: Interval, record: &mut HitRecord) -> bool;
+    fn hit(&self, ray: &Ray, interval: Interval) -> Option<HitRecord>;
 }
 
 #[cfg(test)]
@@ -49,9 +61,10 @@ mod tests {
     fn test_create() {
         let point = Point3::new(0.0, 1.0, 2.0);
         let normal = Vec3::new(1.0, 3.0, -1.0);
+        let material = Arc::new(Lambertian::default());
         let t = 2.88;
         let front_face = false;
-        let record = HitRecord::new(point, normal, t, front_face);
+        let record = HitRecord::new(point, normal, material, t, front_face);
         assert_eq!(record.point, point);
         assert_eq!(record.normal, normal);
         assert_eq!(record.t, t);

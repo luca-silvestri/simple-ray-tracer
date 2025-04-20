@@ -108,13 +108,18 @@ impl Camera {
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
-        let mut record = HitRecord::default();
-        if world.hit(ray, Interval::new(0.001, f64::INFINITY), &mut record) {
-            let direction = record.normal + Vec3::random_unit_vector();
-            return 0.5 * self.ray_color(&Ray::new(record.point, direction), depth - 1, world);
+        match world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
+            Some(record) => match record.material.scatter(ray, &record) {
+                Some((attenuation, scattered_ray)) => {
+                    attenuation * self.ray_color(&scattered_ray, depth - 1, world)
+                }
+                None => Color::new(0.0, 0.0, 0.0),
+            },
+            None => {
+                let unit_direction = ray.direction().unit_vector();
+                let a = 0.5 * (unit_direction.y + 1.0);
+                (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+            }
         }
-        let unit_direction = ray.direction().unit_vector();
-        let a = 0.5 * (unit_direction.y + 1.0);
-        return (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0);
     }
 }

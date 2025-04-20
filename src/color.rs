@@ -6,9 +6,13 @@ use crate::vec3::Vec3;
 pub type Color = Vec3;
 
 pub fn write_color<W: Write>(out: &mut W, pixel: &Color) -> io::Result<()> {
-    let r = pixel.x;
-    let g = pixel.y;
-    let b = pixel.z;
+    let mut r = pixel.x;
+    let mut g = pixel.y;
+    let mut b = pixel.z;
+
+    r = linear_to_gamma(r);
+    g = linear_to_gamma(g);
+    b = linear_to_gamma(b);
 
     let intensity = Interval::new(0.000, 0.999);
     let rbyte = (255.999 * intensity.clamp(r)) as i16;
@@ -18,6 +22,13 @@ pub fn write_color<W: Write>(out: &mut W, pixel: &Color) -> io::Result<()> {
     write!(out, "{rbyte} {gbyte} {bbyte}\n")?;
 
     Ok(())
+}
+
+fn linear_to_gamma(linear_component: f64) -> f64 {
+    if linear_component > 0.0 {
+        return linear_component.sqrt();
+    }
+    return 0.0;
 }
 
 #[cfg(test)]

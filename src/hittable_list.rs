@@ -25,20 +25,20 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, ray: &Ray, interval: Interval, record: &mut HitRecord) -> bool {
-        let mut temp: HitRecord = HitRecord::default();
-        let mut hit_anything = false;
+    fn hit(&self, ray: &Ray, interval: Interval) -> Option<HitRecord> {
+        let mut result: Option<HitRecord> = None;
         let mut closest_so_far = interval.max;
 
         for object in &self.objects {
-            if object.hit(ray, Interval::new(interval.min, closest_so_far), &mut temp) {
-                hit_anything = true;
-                closest_so_far = temp.t;
-                *record = temp;
+            match object.hit(ray, Interval::new(interval.min, closest_so_far)) {
+                Some(temp) => {
+                    closest_so_far = temp.t;
+                    result = Some(temp);
+                }
+                None => (),
             }
         }
-
-        hit_anything
+        return result;
     }
 }
 
@@ -46,6 +46,7 @@ impl Hittable for HittableList {
 mod tests {
     use super::*;
     use crate::{
+        material::Lambertian,
         ray::Ray,
         sphere::Sphere,
         vec3::{Point3, Vec3},
@@ -54,12 +55,20 @@ mod tests {
     #[test]
     fn test_ray_hits_one_sphere_in_list() {
         let mut world = HittableList::new();
-        let sphere = Arc::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5));
+        let sphere = Arc::new(Sphere::new(
+            Vec3::new(0.0, 0.0, -1.0),
+            0.5,
+            Arc::new(Lambertian::default()),
+        ));
         world.add(sphere);
         let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
-        let mut record = HitRecord::default();
-        let hit = world.hit(&ray, Interval::new(0.001, f64::INFINITY), &mut record);
-        assert!(hit, "Ray should hit the sphere in the world");
+        let result = world.hit(&ray, Interval::new(0.001, f64::INFINITY));
+        assert_eq!(
+            result.is_some(),
+            true,
+            "Ray should hit the sphere in the world"
+        );
+        let record = result.unwrap();
         assert!(
             (record.t - 0.5).abs() < 1e-6,
             "Expected hit at t ~ 0.5, got {}",
@@ -75,11 +84,18 @@ mod tests {
     #[test]
     fn test_ray_misses_all_objects() {
         let mut world = HittableList::new();
-        let sphere = Arc::new(Sphere::new(Vec3::new(0.0, 0.0, -5.0), 0.5));
+        let sphere = Arc::new(Sphere::new(
+            Vec3::new(0.0, 0.0, -5.0),
+            0.5,
+            Arc::new(Lambertian::default()),
+        ));
         world.add(sphere);
         let ray = Ray::new(Point3::new(0.0, 2.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
-        let mut record = HitRecord::default();
-        let hit = world.hit(&ray, Interval::new(0.001, f64::INFINITY), &mut record);
-        assert!(!hit, "Ray should miss all objects in the world");
+        let result = world.hit(&ray, Interval::new(0.001, f64::INFINITY));
+        assert_eq!(
+            result.is_none(),
+            true,
+            "Ray should miss all objects in the world"
+        );
     }
 }

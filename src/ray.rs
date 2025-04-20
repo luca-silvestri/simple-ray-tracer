@@ -24,6 +24,12 @@ impl Ray {
     }
 }
 
+impl Default for Ray {
+    fn default() -> Self {
+        Ray::new(Point3::default(), Vec3::default())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
