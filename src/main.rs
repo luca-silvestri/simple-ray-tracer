@@ -15,7 +15,7 @@ use color::Color;
 use hittable_list::HittableList;
 use material::{Dielectric, Lambertian, Metal};
 use sphere::Sphere;
-use vec3::Point3;
+use vec3::{Point3, Vec3};
 
 fn main() {
     let mut world = HittableList::new();
@@ -56,6 +56,19 @@ fn main() {
     let image_width: i32 = 400;
     let samples_per_pixel: i32 = 10;
     let max_depth = 50;
-    let camera = Camera::new(aspect_ratio, image_width, samples_per_pixel, max_depth);
+    let vertical_field_of_view = 20.0;
+    let lookfrom = Point3::new(-2.0, 2.0, 1.0);
+    let lookat = Point3::new(0.0, 0.0, -1.0);
+    let view_up = Vec3::new(0.0, 1.0, 0.0);
+    let camera = Camera::new(
+        aspect_ratio,
+        image_width,
+        samples_per_pixel,
+        max_depth,
+        vertical_field_of_view,
+        lookfrom,
+        lookat,
+        view_up,
+    );
     camera.render(&world, &mut io::stdout());
 }
