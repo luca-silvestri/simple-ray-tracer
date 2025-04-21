@@ -60,6 +60,8 @@ fn main() {
     let lookfrom = Point3::new(-2.0, 2.0, 1.0);
     let lookat = Point3::new(0.0, 0.0, -1.0);
     let view_up = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle = 10.0;
+    let focus_distance = 3.4;
     let camera = Camera::new(
         aspect_ratio,
         image_width,
@@ -69,6 +71,8 @@ fn main() {
         lookfrom,
         lookat,
         view_up,
+        defocus_angle,
+        focus_distance,
     );
     camera.render(&world, &mut io::stdout());
 }

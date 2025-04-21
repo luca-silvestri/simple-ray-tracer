@@ -61,6 +61,20 @@ impl Vec3 {
         }
     }
 
+    pub fn random_in_unit_disk() -> Vec3 {
+        let mut rng = rand::rng();
+        loop {
+            let candidate = Vec3::new(
+                rng.random_range(-1.0..1.0),
+                rng.random_range(-1.0..1.0),
+                0.0,
+            );
+            if candidate.length() < 1.0 {
+                return candidate;
+            }
+        }
+    }
+
     pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
         let on_unit_sphere: Vec3 = Vec3::random_unit_vector();
         if on_unit_sphere.dot(normal) > 0.0 {
