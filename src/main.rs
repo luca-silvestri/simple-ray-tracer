@@ -13,7 +13,7 @@ use std::{io, sync::Arc};
 use camera::Camera;
 use color::Color;
 use hittable_list::HittableList;
-use material::{Lambertian, Metal};
+use material::{Dielectric, Lambertian, Metal};
 use sphere::Sphere;
 use vec3::Point3;
 
@@ -22,7 +22,7 @@ fn main() {
 
     let material_ground = Arc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
     let material_center = Arc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    let material_left = Arc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3));
+    let material_left = Arc::new(Dielectric::new(1.0 / 1.33));
     let material_right = Arc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
 
     world.add(Arc::new(Sphere::new(
@@ -48,7 +48,7 @@ fn main() {
 
     let aspect_ratio: f64 = 16.0 / 9.0;
     let image_width: i32 = 400;
-    let samples_per_pixel: i32 = 100;
+    let samples_per_pixel: i32 = 10;
     let max_depth = 50;
     let camera = Camera::new(aspect_ratio, image_width, samples_per_pixel, max_depth);
     camera.render(&world, &mut io::stdout());

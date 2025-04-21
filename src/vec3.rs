@@ -73,6 +73,14 @@ impl Vec3 {
     pub fn reflect(incident: &Vec3, normal: &Vec3) -> Vec3 {
         *incident - 2.0 * incident.dot(&normal) * *normal
     }
+
+    pub fn refract(incident: &Vec3, normal: &Vec3, eta_ratio: f64) -> Vec3 {
+        let cos_theta = (-*incident).dot(&normal).min(1.0);
+        let ray_out_perpendicular = eta_ratio * (*incident + *normal * cos_theta);
+        let ray_out_parallel =
+            *normal * -(1.0 - ray_out_perpendicular.length_squared()).abs().sqrt();
+        ray_out_perpendicular + ray_out_parallel
+    }
 }
 
 // Operator overloading

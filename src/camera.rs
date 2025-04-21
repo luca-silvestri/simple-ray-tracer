@@ -4,7 +4,7 @@ use rand::Rng;
 
 use crate::{
     color::{Color, write_color},
-    hittable::{HitRecord, Hittable},
+    hittable::Hittable,
     interval::Interval,
     ray::Ray,
     vec3::{Point3, Vec3},
@@ -78,14 +78,7 @@ impl Camera {
                     pixel_color = pixel_color + self.ray_color(&ray, self.max_depth, world);
                 }
                 pixel_color = pixel_color / self.samples_per_pixel as f64;
-                write_color(out, &pixel_color);
-                // let pixel_center = self.pixel00_loc
-                //     + self.pixel_delta_u * i as f64
-                //     + self.pixel_delta_v * j as f64;
-                // let ray_direction = pixel_center - self.center;
-                // let ray = Ray::new(self.center, ray_direction);
-                // let pixel_color = self.ray_color(&ray, world);
-                // write_color(out, &pixel_color);
+                write_color(out, &pixel_color).unwrap();
             }
         }
         eprintln!("Done.")
@@ -101,7 +94,7 @@ impl Camera {
         let pixel_sample = self.pixel00_loc
             + (i as f64 + offset.x) * self.pixel_delta_u
             + (j as f64 + offset.y) * self.pixel_delta_v;
-        return Ray::new(self.center, pixel_sample - self.center);
+        Ray::new(self.center, pixel_sample - self.center)
     }
 
     fn ray_color(&self, ray: &Ray, depth: i32, world: &impl Hittable) -> Color {

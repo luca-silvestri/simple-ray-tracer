@@ -53,7 +53,43 @@ impl Material for Metal {
         let mut reflected = Vec3::reflect(ray_in.direction(), &record.normal);
         reflected = reflected.unit_vector() + self.fuzz * Vec3::random_unit_vector();
         let attenuation = self.albedo;
-        let ray_out = Ray::new(record.point, reflected);
-        return Some((attenuation, ray_out));
+        let scattered = Ray::new(record.point, reflected);
+        if scattered.direction().dot(&record.normal) > 0.0 {
+            Some((attenuation, scattered))
+        } else {
+            None
+        }
+    }
+}
+
+pub struct Dielectric {
+    pub refraction_index: f64,
+}
+
+impl Dielectric {
+    pub fn new(refraction_index: f64) -> Self {
+        Dielectric { refraction_index }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, ray_in: &Ray, record: &HitRecord) -> Option<(Color, Ray)> {
+        let attenuation = Color::new(1.0, 1.0, 1.0);
+        let refraction_index = if record.front_face {
+            1.0 / self.refraction_index
+        } else {
+            self.refraction_index
+        };
+        let unit_direction = ray_in.direction().unit_vector();
+        let cos_theta = -unit_direction.dot(&record.normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        let cannot_refract = refraction_index * sin_theta > 1.0;
+        let direction = if cannot_refract {
+            Vec3::reflect(&unit_direction, &record.normal)
+        } else {
+            Vec3::refract(&unit_direction, &record.normal, refraction_index)
+        };
+        let scattered = Ray::new(record.point, direction);
+        Some((attenuation, scattered))
     }
 }
