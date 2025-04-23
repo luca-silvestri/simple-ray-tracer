@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::interval::Interval;
-use crate::material::{Lambertian, Material};
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
 
@@ -37,18 +37,6 @@ impl HitRecord {
     }
 }
 
-impl Default for HitRecord {
-    fn default() -> Self {
-        HitRecord {
-            point: Point3::default(),
-            normal: Point3::default(),
-            material: Arc::new(Lambertian::default()),
-            t: 0.0,
-            front_face: false,
-        }
-    }
-}
-
 pub trait Hittable {
     fn hit(&self, ray: &Ray, interval: Interval) -> Option<HitRecord>;
 }
@@ -56,41 +44,20 @@ pub trait Hittable {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::color::Color;
+    use crate::material::Lambertian;
 
     #[test]
     fn test_create() {
         let point = Point3::new(0.0, 1.0, 2.0);
         let normal = Vec3::new(1.0, 3.0, -1.0);
-        let material = Arc::new(Lambertian::default());
+        let material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
         let t = 2.88;
         let front_face = false;
         let record = HitRecord::new(point, normal, material, t, front_face);
         assert_eq!(record.point, point);
         assert_eq!(record.normal, normal);
         assert_eq!(record.t, t);
-        assert_eq!(record.front_face, false);
-    }
-
-    #[test]
-    fn test_default() {
-        let record = HitRecord::default();
-        assert_eq!(
-            record.point,
-            Point3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0
-            }
-        );
-        assert_eq!(
-            record.normal,
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0
-            }
-        );
-        assert_eq!(record.t, 0.0);
         assert_eq!(record.front_face, false);
     }
 }

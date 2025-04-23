@@ -42,12 +42,12 @@ impl Hittable for Sphere {
             }
         }
 
-        let mut record = HitRecord::default();
-        record.t = root;
-        record.point = ray.at(record.t);
-        let normal = (record.point - self.center) / self.radius;
+        let t = root;
+        let point = ray.at(t);
+        let normal = (point - self.center) / self.radius;
+        let material = Arc::clone(&self.material);
+        let mut record = HitRecord::new(point, normal, material, t, false);
         record.set_face_normal(ray, &normal);
-        record.material = Arc::clone(&self.material);
 
         return Some(record);
     }
@@ -57,6 +57,7 @@ impl Hittable for Sphere {
 mod tests {
     use core::f64;
 
+    use crate::color::Color;
     use crate::material::Lambertian;
 
     use super::*;
@@ -65,7 +66,7 @@ mod tests {
     fn test_create() {
         let center = Point3::new(0.0, 2.0, 1.0);
         let radius = 3.0;
-        let material = Lambertian::default();
+        let material = Lambertian::new(Color::default());
         let sphere = Sphere::new(center, radius, Arc::new(material));
         assert_eq!(sphere.center, center);
         assert_eq!(sphere.radius, radius);
@@ -75,7 +76,7 @@ mod tests {
     fn test_create_with_negative_radius() {
         let center = Point3::new(0.0, 2.0, 1.0);
         let radius = -3.0;
-        let material = Lambertian::default();
+        let material = Lambertian::new(Color::default());
         let sphere = Sphere::new(center, radius, Arc::new(material));
         assert_eq!(sphere.center, center);
         assert_eq!(sphere.radius, 0.0);
@@ -86,7 +87,7 @@ mod tests {
         let sphere = Sphere::new(
             Point3::new(0.0, 0.0, -1.0),
             0.5,
-            Arc::new(Lambertian::default()),
+            Arc::new(Lambertian::new(Color::default())),
         );
 
         let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
@@ -116,7 +117,7 @@ mod tests {
         let sphere = Sphere::new(
             Point3::new(0.0, 0.0, -1.0),
             0.5,
-            Arc::new(Lambertian::default()),
+            Arc::new(Lambertian::new(Color::default())),
         );
 
         let ray = Ray::new(Point3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, -1.0));

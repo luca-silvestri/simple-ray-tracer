@@ -1,3 +1,4 @@
+use std::cmp;
 use std::io::Write;
 
 use rand::Rng;
@@ -73,16 +74,12 @@ impl Camera {
     }
 
     fn initialize(&mut self) {
-        self.image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
-        self.image_height = if self.image_height < 1 {
-            1
-        } else {
-            self.image_height
-        };
+        self.image_height = cmp::max((self.image_width as f64 / self.aspect_ratio) as i32, 1);
 
         self.center = self.lookfrom;
+
         let theta = self.vertical_field_of_view.to_radians();
-        let h = (theta / 2.0).tan();
+        let h = f64::tan(theta / 2.0);
         let viewport_height = 2.0 * h * self.focus_distance;
         let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
 
@@ -92,7 +89,6 @@ impl Camera {
 
         let viewport_u = viewport_width * self.u;
         let viewport_v = viewport_height * -self.v;
-
         self.pixel_delta_u = viewport_u / self.image_width as f64;
         self.pixel_delta_v = viewport_v / self.image_height as f64;
 

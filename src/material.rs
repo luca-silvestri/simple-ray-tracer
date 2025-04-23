@@ -3,7 +3,9 @@ use rand::random;
 use crate::{color::Color, hittable::HitRecord, ray::Ray, vec3::Vec3};
 
 pub trait Material {
-    fn scatter(&self, ray_in: &Ray, record: &HitRecord) -> Option<(Color, Ray)>;
+    fn scatter(&self, _ray_in: &Ray, _record: &HitRecord) -> Option<(Color, Ray)> {
+        None
+    }
 }
 
 pub struct Lambertian {
@@ -13,14 +15,6 @@ pub struct Lambertian {
 impl Lambertian {
     pub fn new(albedo: Color) -> Self {
         Lambertian { albedo }
-    }
-}
-
-impl Default for Lambertian {
-    fn default() -> Self {
-        Lambertian {
-            albedo: Color::new(0.5, 0.5, 0.5),
-        }
     }
 }
 
@@ -45,7 +39,7 @@ impl Metal {
     pub fn new(albedo: Color, fuzz: f64) -> Self {
         Metal {
             albedo,
-            fuzz: if fuzz < 1.0 { fuzz } else { 1.0 },
+            fuzz: f64::min(fuzz, 1.0),
         }
     }
 }

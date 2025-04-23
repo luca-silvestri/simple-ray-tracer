@@ -1,23 +1,13 @@
-mod camera;
-mod color;
-mod hittable;
-mod hittable_list;
-mod interval;
-mod material;
-mod ray;
-mod sphere;
-mod vec3;
-
 use std::{io, sync::Arc};
 
 use rand::Rng;
 
-use camera::Camera;
-use color::Color;
-use hittable_list::HittableList;
-use material::{Dielectric, Lambertian, Metal};
-use sphere::Sphere;
-use vec3::{Point3, Vec3};
+use ray_tracer::camera::Camera;
+use ray_tracer::color::Color;
+use ray_tracer::hittable_list::HittableList;
+use ray_tracer::material::{Dielectric, Lambertian, Metal};
+use ray_tracer::sphere::Sphere;
+use ray_tracer::vec3::{Point3, Vec3};
 
 fn main() {
     let mut world = HittableList::new();

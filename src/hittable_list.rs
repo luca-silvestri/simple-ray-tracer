@@ -30,12 +30,9 @@ impl Hittable for HittableList {
         let mut closest_so_far = interval.max;
 
         for object in &self.objects {
-            match object.hit(ray, Interval::new(interval.min, closest_so_far)) {
-                Some(temp) => {
-                    closest_so_far = temp.t;
-                    result = Some(temp);
-                }
-                None => (),
+            if let Some(record) = object.hit(ray, Interval::new(interval.min, closest_so_far)) {
+                closest_so_far = record.t;
+                result = Some(record);
             }
         }
         return result;
@@ -46,11 +43,14 @@ impl Hittable for HittableList {
 mod tests {
     use super::*;
     use crate::{
-        material::Lambertian,
+        material::Material,
         ray::Ray,
         sphere::Sphere,
         vec3::{Point3, Vec3},
     };
+
+    struct TestMaterial;
+    impl Material for TestMaterial {}
 
     #[test]
     fn test_ray_hits_one_sphere_in_list() {
@@ -58,7 +58,7 @@ mod tests {
         let sphere = Arc::new(Sphere::new(
             Vec3::new(0.0, 0.0, -1.0),
             0.5,
-            Arc::new(Lambertian::default()),
+            Arc::new(TestMaterial),
         ));
         world.add(sphere);
         let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
@@ -87,7 +87,7 @@ mod tests {
         let sphere = Arc::new(Sphere::new(
             Vec3::new(0.0, 0.0, -5.0),
             0.5,
-            Arc::new(Lambertian::default()),
+            Arc::new(TestMaterial),
         ));
         world.add(sphere);
         let ray = Ray::new(Point3::new(0.0, 2.0, 0.0), Vec3::new(0.0, 0.0, -1.0));

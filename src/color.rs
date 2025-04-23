@@ -25,11 +25,7 @@ pub fn write_color<W: Write>(out: &mut W, pixel: &Color) -> io::Result<()> {
 }
 
 fn linear_to_gamma(linear_component: f64) -> f64 {
-    if linear_component > 0.0 {
-        linear_component.sqrt()
-    } else {
-        0.0
-    }
+    f64::max(linear_component, 0.0).sqrt()
 }
 
 #[cfg(test)]
