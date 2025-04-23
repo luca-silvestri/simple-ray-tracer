@@ -1,10 +1,13 @@
 use std::cmp;
 use std::io::Write;
 
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
+use itertools::Itertools;
 use rand::Rng;
+use rayon::prelude::*;
 
 use crate::{
-    color::{Color, write_color},
+    color::{Color, format_color},
     hittable::Hittable,
     interval::Interval,
     ray::Ray,
@@ -101,21 +104,43 @@ impl Camera {
         self.defocus_disk_v = self.v * defocus_radius;
     }
 
-    pub fn render<W: Write>(&self, world: &impl Hittable, out: &mut W) {
-        write!(out, "P3\n{} {}\n255\n", self.image_width, self.image_height).unwrap();
-        for j in 0..self.image_height {
-            eprintln!("Scanlines remaining: {}", self.image_height - j);
-            for i in 0..self.image_width {
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for _ in 0..self.samples_per_pixel {
-                    let ray = self.get_ray(i, j);
-                    pixel_color = pixel_color + self.ray_color(&ray, self.max_depth, world);
-                }
-                pixel_color = pixel_color / self.samples_per_pixel as f64;
-                write_color(out, &pixel_color).unwrap();
-            }
-        }
-        eprintln!("Done.")
+    pub fn render<W: Write>(&self, world: &(impl Hittable + Send + Sync), out: &mut W) {
+        let progress_bar = self.get_progress_bar();
+        let pixels = (0..self.image_height)
+            .cartesian_product(0..self.image_width)
+            .collect::<Vec<(i32, i32)>>()
+            .into_par_iter()
+            .progress_with(progress_bar)
+            .map(|(j, i)| {
+                let pixel_color: Color = (0..self.samples_per_pixel)
+                    .into_iter()
+                    .map(|_| self.ray_color(&self.get_ray(i, j), self.max_depth, world))
+                    .sum::<Color>()
+                    / self.samples_per_pixel as f64;
+                format_color(&pixel_color)
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+        write!(
+            out,
+            "P3\n{} {}\n255\n{}",
+            self.image_width, self.image_height, pixels
+        )
+        .unwrap();
+    }
+
+    fn get_progress_bar(&self) -> ProgressBar {
+        let total_number_of_pixels = self.image_width as u64 * self.image_height as u64;
+        let progress_bar = ProgressBar::new(total_number_of_pixels);
+        progress_bar.set_style(
+            ProgressStyle::default_bar()
+                .template(
+                    "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} ({eta})",
+                )
+                .unwrap()
+                .progress_chars("#>-"),
+        );
+        progress_bar
     }
 
     fn get_ray(&self, i: i32, j: i32) -> Ray {

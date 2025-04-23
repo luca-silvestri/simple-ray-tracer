@@ -67,7 +67,7 @@ fn main() {
 
     let aspect_ratio: f64 = 16.0 / 9.0;
     let image_width: i32 = 400;
-    let samples_per_pixel: i32 = 10;
+    let samples_per_pixel: i32 = 100;
     let max_depth = 50;
     let vertical_field_of_view = 20.0;
     let lookfrom = Point3::new(13.0, 2.0, 3.0);

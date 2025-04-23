@@ -2,7 +2,7 @@ use rand::random;
 
 use crate::{color::Color, hittable::HitRecord, ray::Ray, vec3::Vec3};
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, _ray_in: &Ray, _record: &HitRecord) -> Option<(Color, Ray)> {
         None
     }

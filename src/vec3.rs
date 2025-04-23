@@ -1,4 +1,7 @@
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::{
+    iter::Sum,
+    ops::{Add, Div, Mul, Neg, Sub},
+};
 
 use rand::Rng;
 
@@ -153,6 +156,14 @@ impl Neg for Vec3 {
 
     fn neg(self) -> Vec3 {
         Vec3::new(-self.x, -self.y, -self.z)
+    }
+}
+
+impl Sum for Vec3 {
+    fn sum<I: Iterator<Item = Vec3>>(iter: I) -> Vec3 {
+        iter.fold(Vec3::new(0.0, 0.0, 0.0), |acc, p| {
+            Vec3::new(acc.x + p.x, acc.y + p.y, acc.z + p.z)
+        })
     }
 }
 
