@@ -7,15 +7,23 @@ use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
 
 pub struct Sphere {
-    center: Point3,
+    center: Ray,
     radius: f64,
     material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, material: Arc<dyn Material>) -> Self {
+    pub fn stationary(center: Point3, radius: f64, material: Arc<dyn Material>) -> Self {
         Sphere {
-            center,
+            center: Ray::new(center, Vec3::new(0.0, 0.0, 0.0), 0.0),
+            radius: f64::max(radius, 0.0),
+            material,
+        }
+    }
+
+    pub fn moving(start: Point3, end: Point3, radius: f64, material: Arc<dyn Material>) -> Self {
+        Sphere {
+            center: Ray::new(start, end - start, 0.0),
             radius: f64::max(radius, 0.0),
             material,
         }
@@ -24,7 +32,8 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, interval: Interval) -> Option<HitRecord> {
-        let oc: Vec3 = self.center - *ray.origin();
+        let current_center = self.center.at(ray.time());
+        let oc: Vec3 = current_center - *ray.origin();
         let a = ray.direction().length_squared();
         let h = ray.direction().dot(&oc);
         let c = oc.length_squared() - self.radius * self.radius;
@@ -44,7 +53,7 @@ impl Hittable for Sphere {
 
         let t = root;
         let point = ray.at(t);
-        let normal = (point - self.center) / self.radius;
+        let normal = (point - current_center) / self.radius;
         let material = Arc::clone(&self.material);
         let mut record = HitRecord::new(point, normal, material, t, false);
         record.set_face_normal(ray, &normal);
@@ -67,8 +76,8 @@ mod tests {
         let center = Point3::new(0.0, 2.0, 1.0);
         let radius = 3.0;
         let material = Lambertian::new(Color::default());
-        let sphere = Sphere::new(center, radius, Arc::new(material));
-        assert_eq!(sphere.center, center);
+        let sphere = Sphere::stationary(center, radius, Arc::new(material));
+        assert_eq!(sphere.center.origin(), &center);
         assert_eq!(sphere.radius, radius);
     }
 
@@ -77,20 +86,20 @@ mod tests {
         let center = Point3::new(0.0, 2.0, 1.0);
         let radius = -3.0;
         let material = Lambertian::new(Color::default());
-        let sphere = Sphere::new(center, radius, Arc::new(material));
-        assert_eq!(sphere.center, center);
+        let sphere = Sphere::stationary(center, radius, Arc::new(material));
+        assert_eq!(sphere.center.origin(), &center);
         assert_eq!(sphere.radius, 0.0);
     }
 
     #[test]
     fn test_ray_hits_sphere() {
-        let sphere = Sphere::new(
+        let sphere = Sphere::stationary(
             Point3::new(0.0, 0.0, -1.0),
             0.5,
             Arc::new(Lambertian::new(Color::default())),
         );
 
-        let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
+        let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0), 2.0);
         let interval = Interval::new(0.001, f64::INFINITY);
         let result = sphere.hit(&ray, interval);
         assert_eq!(result.is_some(), true, "Ray should hit the sphere");
@@ -114,13 +123,13 @@ mod tests {
 
     #[test]
     fn test_ray_misses_sphere() {
-        let sphere = Sphere::new(
+        let sphere = Sphere::stationary(
             Point3::new(0.0, 0.0, -1.0),
             0.5,
             Arc::new(Lambertian::new(Color::default())),
         );
 
-        let ray = Ray::new(Point3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
+        let ray = Ray::new(Point3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, -1.0), 2.0);
         let interval = Interval::new(0.001, f64::INFINITY);
         let result = sphere.hit(&ray, interval);
         assert_eq!(result.is_none(), true, "Ray should miss the sphere");

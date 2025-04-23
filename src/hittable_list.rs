@@ -55,13 +55,13 @@ mod tests {
     #[test]
     fn test_ray_hits_one_sphere_in_list() {
         let mut world = HittableList::new();
-        let sphere = Arc::new(Sphere::new(
+        let sphere = Arc::new(Sphere::stationary(
             Vec3::new(0.0, 0.0, -1.0),
             0.5,
             Arc::new(TestMaterial),
         ));
         world.add(sphere);
-        let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
+        let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0), 2.0);
         let result = world.hit(&ray, Interval::new(0.001, f64::INFINITY));
         assert_eq!(
             result.is_some(),
@@ -84,13 +84,13 @@ mod tests {
     #[test]
     fn test_ray_misses_all_objects() {
         let mut world = HittableList::new();
-        let sphere = Arc::new(Sphere::new(
+        let sphere = Arc::new(Sphere::stationary(
             Vec3::new(0.0, 0.0, -5.0),
             0.5,
             Arc::new(TestMaterial),
         ));
         world.add(sphere);
-        let ray = Ray::new(Point3::new(0.0, 2.0, 0.0), Vec3::new(0.0, 0.0, -1.0));
+        let ray = Ray::new(Point3::new(0.0, 2.0, 0.0), Vec3::new(0.0, 0.0, -1.0), 2.0);
         let result = world.hit(&ray, Interval::new(0.001, f64::INFINITY));
         assert_eq!(
             result.is_none(),

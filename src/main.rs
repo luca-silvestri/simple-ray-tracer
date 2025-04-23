@@ -13,7 +13,7 @@ use ray_tracer::color::Color;
 use ray_tracer::hittable_list::HittableList;
 use ray_tracer::material::{Dielectric, Lambertian, Metal};
 use ray_tracer::sphere::Sphere;
-use ray_tracer::vec3::Point3;
+use ray_tracer::vec3::{Point3, Vec3};
 
 fn main() {
     dotenv().ok();
@@ -45,7 +45,7 @@ fn build_world() -> HittableList {
     let mut world = HittableList::new();
 
     let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    world.add(Arc::new(Sphere::new(
+    world.add(Arc::new(Sphere::stationary(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
         ground_material,
@@ -64,34 +64,35 @@ fn build_world() -> HittableList {
                 if choose_material < 0.8 {
                     let albedo = Color::random() * Color::random();
                     let material = Arc::new(Lambertian::new(albedo));
-                    world.add(Arc::new(Sphere::new(center, 0.2, material)));
+                    let end_center = center + Vec3::new(0.0, rng.random_range(0.0..0.5), 0.0);
+                    world.add(Arc::new(Sphere::moving(center, end_center, 0.2, material)));
                 } else if choose_material < 0.95 {
                     let albedo = Color::random();
                     let fuzz = rng.random_range(0.0..0.5);
                     let material = Arc::new(Metal::new(albedo, fuzz));
-                    world.add(Arc::new(Sphere::new(center, 0.2, material)));
+                    world.add(Arc::new(Sphere::stationary(center, 0.2, material)));
                 } else {
                     let material = Arc::new(Dielectric::new(1.5));
-                    world.add(Arc::new(Sphere::new(center, 0.2, material)));
+                    world.add(Arc::new(Sphere::stationary(center, 0.2, material)));
                 }
             }
         }
     }
 
     let material1 = Arc::new(Dielectric::new(1.5));
-    world.add(Arc::new(Sphere::new(
+    world.add(Arc::new(Sphere::stationary(
         Point3::new(0.0, 1.0, 0.0),
         1.0,
         material1,
     )));
     let material2 = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
-    world.add(Arc::new(Sphere::new(
+    world.add(Arc::new(Sphere::stationary(
         Point3::new(-4.0, 1.0, 0.0),
         1.0,
         material2,
     )));
     let material3 = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
-    world.add(Arc::new(Sphere::new(
+    world.add(Arc::new(Sphere::stationary(
         Point3::new(4.0, 1.0, 0.0),
         1.0,
         material3,
