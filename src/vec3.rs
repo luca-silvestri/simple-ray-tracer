@@ -4,8 +4,9 @@ use std::{
 };
 
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,

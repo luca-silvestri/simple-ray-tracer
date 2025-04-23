@@ -5,6 +5,7 @@ use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use itertools::Itertools;
 use rand::Rng;
 use rayon::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     color::{Color, format_color},
@@ -13,6 +14,20 @@ use crate::{
     ray::Ray,
     vec3::{Point3, Vec3},
 };
+
+#[derive(Serialize, Deserialize)]
+pub struct CameraSettings {
+    pub aspect_ratio: f64,
+    pub image_width: i32,
+    pub samples_per_pixel: i32,
+    pub max_depth: i32,
+    pub vertical_field_of_view: f64,
+    pub lookfrom: Point3,
+    pub lookat: Point3,
+    pub view_up: Vec3,
+    pub defocus_angle: f64,
+    pub focus_distance: f64,
+}
 
 pub struct Camera {
     pub aspect_ratio: f64,

@@ -1,15 +1,47 @@
-use std::{io, sync::Arc};
+use std::{
+    env,
+    fs::File,
+    io::{self, BufReader},
+    sync::Arc,
+};
 
+use dotenv::dotenv;
 use rand::Rng;
 
-use ray_tracer::camera::Camera;
+use ray_tracer::camera::{Camera, CameraSettings};
 use ray_tracer::color::Color;
 use ray_tracer::hittable_list::HittableList;
 use ray_tracer::material::{Dielectric, Lambertian, Metal};
 use ray_tracer::sphere::Sphere;
-use ray_tracer::vec3::{Point3, Vec3};
+use ray_tracer::vec3::Point3;
 
 fn main() {
+    dotenv().ok();
+    let world = build_world();
+    let camera = build_camera();
+    camera.render(&world, &mut io::stdout());
+}
+
+fn build_camera() -> Camera {
+    let settings_path = env::var("CAMERA_SETTINGS_PATH").unwrap();
+    let file = File::open(settings_path).unwrap();
+    let reader = BufReader::new(file);
+    let settings: CameraSettings = serde_json::from_reader(reader).unwrap();
+    Camera::new(
+        settings.aspect_ratio,
+        settings.image_width,
+        settings.samples_per_pixel,
+        settings.max_depth,
+        settings.vertical_field_of_view,
+        settings.lookfrom,
+        settings.lookat,
+        settings.view_up,
+        settings.defocus_angle,
+        settings.focus_distance,
+    )
+}
+
+fn build_world() -> HittableList {
     let mut world = HittableList::new();
 
     let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
@@ -64,28 +96,5 @@ fn main() {
         1.0,
         material3,
     )));
-
-    let aspect_ratio: f64 = 16.0 / 9.0;
-    let image_width: i32 = 400;
-    let samples_per_pixel: i32 = 100;
-    let max_depth = 50;
-    let vertical_field_of_view = 20.0;
-    let lookfrom = Point3::new(13.0, 2.0, 3.0);
-    let lookat = Point3::new(0.0, 0.0, 0.0);
-    let view_up = Vec3::new(0.0, 1.0, 0.0);
-    let defocus_angle = 0.6;
-    let focus_distance = 10.0;
-    let camera = Camera::new(
-        aspect_ratio,
-        image_width,
-        samples_per_pixel,
-        max_depth,
-        vertical_field_of_view,
-        lookfrom,
-        lookat,
-        view_up,
-        defocus_angle,
-        focus_distance,
-    );
-    camera.render(&world, &mut io::stdout());
+    world
 }
