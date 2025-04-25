@@ -8,7 +8,6 @@ use std::{
 use dotenv::dotenv;
 use rand::Rng;
 
-use ray_tracer::color::Color;
 use ray_tracer::hittable_list::HittableList;
 use ray_tracer::material::{Dielectric, Lambertian, Metal};
 use ray_tracer::sphere::Sphere;
@@ -18,6 +17,7 @@ use ray_tracer::{
     bvh::BVHNode,
     camera::{Camera, CameraSettings},
 };
+use ray_tracer::{color::Color, texture::ImageTexture};
 
 fn main() {
     dotenv().ok();
@@ -25,7 +25,8 @@ fn main() {
     let scene_choice: usize = args[1].parse().expect("Expected a number");
     let scene = match scene_choice {
         1 => bouncing_spheres(),
-        _ => checkered_spheres(),
+        2 => checkered_spheres(),
+        _ => earth(),
     };
     let camera = build_camera();
     camera.render(&scene, &mut io::stdout());
@@ -129,5 +130,19 @@ fn checkered_spheres() -> HittableList {
         10.0,
         Arc::new(Lambertian::new(checker)),
     )));
+    world
+}
+
+fn earth() -> HittableList {
+    let mut world = HittableList::new();
+    let earth_filename = env::var("EARTH_IMAGE_PATH").unwrap();
+    let earth_texture = Arc::new(ImageTexture::new(earth_filename));
+    let earth_surface = Arc::new(Lambertian::new(earth_texture));
+    let globe = Arc::new(Sphere::stationary(
+        Point3::new(0.0, 0.0, 0.0),
+        2.0,
+        earth_surface,
+    ));
+    world.add(globe);
     world
 }
