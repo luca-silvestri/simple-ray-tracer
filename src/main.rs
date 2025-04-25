@@ -8,18 +8,21 @@ use std::{
 use dotenv::dotenv;
 use rand::Rng;
 
-use ray_tracer::camera::{Camera, CameraSettings};
 use ray_tracer::color::Color;
 use ray_tracer::hittable_list::HittableList;
 use ray_tracer::material::{Dielectric, Lambertian, Metal};
 use ray_tracer::sphere::Sphere;
 use ray_tracer::vec3::{Point3, Vec3};
+use ray_tracer::{
+    bvh::BVHNode,
+    camera::{Camera, CameraSettings},
+};
 
 fn main() {
     dotenv().ok();
-    let world = build_world();
+    let scene = build_scene();
     let camera = build_camera();
-    camera.render(&world, &mut io::stdout());
+    camera.render(&scene, &mut io::stdout());
 }
 
 fn build_camera() -> Camera {
@@ -41,7 +44,7 @@ fn build_camera() -> Camera {
     )
 }
 
-fn build_world() -> HittableList {
+fn build_scene() -> HittableList {
     let mut world = HittableList::new();
 
     let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
@@ -97,5 +100,9 @@ fn build_world() -> HittableList {
         1.0,
         material3,
     )));
-    world
+
+    let mut scene = HittableList::new();
+    scene.add(Arc::new(BVHNode::new(&mut world)));
+    scene
+    // world
 }

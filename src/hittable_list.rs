@@ -1,17 +1,24 @@
 use std::sync::Arc;
 
+use crate::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
 
 pub struct HittableList {
     pub objects: Vec<Arc<dyn Hittable>>,
+    bbox: AABB,
 }
 
 impl HittableList {
     pub fn new() -> Self {
         HittableList {
             objects: Vec::new(),
+            bbox: AABB {
+                x: Interval::empty(),
+                y: Interval::empty(),
+                z: Interval::empty(),
+            },
         }
     }
 
@@ -20,17 +27,21 @@ impl HittableList {
     }
 
     pub fn add(&mut self, object: Arc<dyn Hittable>) {
+        self.bbox = self.bbox.union(object.bounding_box());
         self.objects.push(object);
     }
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, ray: &Ray, interval: Interval) -> Option<HitRecord> {
+    fn bounding_box(&self) -> &AABB {
+        &self.bbox
+    }
+    fn hit(&self, ray: &Ray, interval: &Interval) -> Option<HitRecord> {
         let mut result: Option<HitRecord> = None;
         let mut closest_so_far = interval.max;
 
         for object in &self.objects {
-            if let Some(record) = object.hit(ray, Interval::new(interval.min, closest_so_far)) {
+            if let Some(record) = object.hit(ray, &Interval::new(interval.min, closest_so_far)) {
                 closest_so_far = record.t;
                 result = Some(record);
             }
@@ -62,7 +73,7 @@ mod tests {
         ));
         world.add(sphere);
         let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0), 2.0);
-        let result = world.hit(&ray, Interval::new(0.001, f64::INFINITY));
+        let result = world.hit(&ray, &Interval::new(0.001, f64::INFINITY));
         assert_eq!(
             result.is_some(),
             true,
@@ -91,7 +102,7 @@ mod tests {
         ));
         world.add(sphere);
         let ray = Ray::new(Point3::new(0.0, 2.0, 0.0), Vec3::new(0.0, 0.0, -1.0), 2.0);
-        let result = world.hit(&ray, Interval::new(0.001, f64::INFINITY));
+        let result = world.hit(&ray, &Interval::new(0.001, f64::INFINITY));
         assert_eq!(
             result.is_none(),
             true,

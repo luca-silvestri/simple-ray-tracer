@@ -187,7 +187,7 @@ impl Camera {
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
         }
-        match world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
+        match world.hit(ray, &Interval::new(0.001, f64::INFINITY)) {
             Some(record) => match record.material.scatter(ray, &record) {
                 Some((attenuation, scattered_ray)) => {
                     attenuation * self.ray_color(&scattered_ray, depth - 1, world)

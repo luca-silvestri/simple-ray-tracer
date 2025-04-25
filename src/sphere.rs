@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::material::Material;
@@ -10,28 +11,38 @@ pub struct Sphere {
     center: Ray,
     radius: f64,
     material: Arc<dyn Material>,
+    bbox: AABB,
 }
 
 impl Sphere {
     pub fn stationary(center: Point3, radius: f64, material: Arc<dyn Material>) -> Self {
+        let rvec = Vec3::new(radius, radius, radius);
         Sphere {
             center: Ray::new(center, Vec3::new(0.0, 0.0, 0.0), 0.0),
             radius: f64::max(radius, 0.0),
             material,
+            bbox: AABB::from_extremes(&(center - rvec), &(center + rvec)),
         }
     }
 
     pub fn moving(start: Point3, end: Point3, radius: f64, material: Arc<dyn Material>) -> Self {
+        let rvec = Vec3::new(radius, radius, radius);
+        let box1 = AABB::from_extremes(&(start - rvec), &(start + rvec));
+        let box2 = AABB::from_extremes(&(end - rvec), &(end + rvec));
         Sphere {
             center: Ray::new(start, end - start, 0.0),
             radius: f64::max(radius, 0.0),
             material,
+            bbox: box1.union(&box2),
         }
     }
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, interval: Interval) -> Option<HitRecord> {
+    fn bounding_box(&self) -> &AABB {
+        &self.bbox
+    }
+    fn hit(&self, ray: &Ray, interval: &Interval) -> Option<HitRecord> {
         let current_center = self.center.at(ray.time());
         let oc: Vec3 = current_center - *ray.origin();
         let a = ray.direction().length_squared();
@@ -101,7 +112,7 @@ mod tests {
 
         let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0), 2.0);
         let interval = Interval::new(0.001, f64::INFINITY);
-        let result = sphere.hit(&ray, interval);
+        let result = sphere.hit(&ray, &interval);
         assert_eq!(result.is_some(), true, "Ray should hit the sphere");
         let record = result.unwrap();
         assert!(
@@ -131,7 +142,7 @@ mod tests {
 
         let ray = Ray::new(Point3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, -1.0), 2.0);
         let interval = Interval::new(0.001, f64::INFINITY);
-        let result = sphere.hit(&ray, interval);
+        let result = sphere.hit(&ray, &interval);
         assert_eq!(result.is_none(), true, "Ray should miss the sphere");
     }
 }
