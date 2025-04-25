@@ -66,7 +66,7 @@ impl Hittable for Sphere {
         let point = ray.at(t);
         let normal = (point - current_center) / self.radius;
         let material = Arc::clone(&self.material);
-        let mut record = HitRecord::new(point, normal, material, t, false);
+        let mut record = HitRecord::new(point, normal, material, t, 0.0, 0.0, false);
         record.set_face_normal(ray, &normal);
 
         return Some(record);
@@ -86,7 +86,7 @@ mod tests {
     fn test_create() {
         let center = Point3::new(0.0, 2.0, 1.0);
         let radius = 3.0;
-        let material = Lambertian::new(Color::default());
+        let material = Lambertian::from_albedo(Color::default());
         let sphere = Sphere::stationary(center, radius, Arc::new(material));
         assert_eq!(sphere.center.origin(), &center);
         assert_eq!(sphere.radius, radius);
@@ -96,7 +96,7 @@ mod tests {
     fn test_create_with_negative_radius() {
         let center = Point3::new(0.0, 2.0, 1.0);
         let radius = -3.0;
-        let material = Lambertian::new(Color::default());
+        let material = Lambertian::from_albedo(Color::default());
         let sphere = Sphere::stationary(center, radius, Arc::new(material));
         assert_eq!(sphere.center.origin(), &center);
         assert_eq!(sphere.radius, 0.0);
@@ -107,7 +107,7 @@ mod tests {
         let sphere = Sphere::stationary(
             Point3::new(0.0, 0.0, -1.0),
             0.5,
-            Arc::new(Lambertian::new(Color::default())),
+            Arc::new(Lambertian::from_albedo(Color::default())),
         );
 
         let ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, -1.0), 2.0);
@@ -137,7 +137,7 @@ mod tests {
         let sphere = Sphere::stationary(
             Point3::new(0.0, 0.0, -1.0),
             0.5,
-            Arc::new(Lambertian::new(Color::default())),
+            Arc::new(Lambertian::from_albedo(Color::default())),
         );
 
         let ray = Ray::new(Point3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, -1.0), 2.0);

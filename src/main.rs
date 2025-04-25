@@ -12,6 +12,7 @@ use ray_tracer::color::Color;
 use ray_tracer::hittable_list::HittableList;
 use ray_tracer::material::{Dielectric, Lambertian, Metal};
 use ray_tracer::sphere::Sphere;
+use ray_tracer::texture::CheckerTexture;
 use ray_tracer::vec3::{Point3, Vec3};
 use ray_tracer::{
     bvh::BVHNode,
@@ -20,7 +21,12 @@ use ray_tracer::{
 
 fn main() {
     dotenv().ok();
-    let scene = build_scene();
+    let args: Vec<String> = env::args().collect();
+    let scene_choice: usize = args[1].parse().expect("Expected a number");
+    let scene = match scene_choice {
+        1 => bouncing_spheres(),
+        _ => checkered_spheres(),
+    };
     let camera = build_camera();
     camera.render(&scene, &mut io::stdout());
 }
@@ -44,10 +50,10 @@ fn build_camera() -> Camera {
     )
 }
 
-fn build_scene() -> HittableList {
+fn bouncing_spheres() -> HittableList {
     let mut world = HittableList::new();
 
-    let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let ground_material = Arc::new(Lambertian::from_albedo(Color::new(0.5, 0.5, 0.5)));
     world.add(Arc::new(Sphere::stationary(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
@@ -66,7 +72,7 @@ fn build_scene() -> HittableList {
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 if choose_material < 0.8 {
                     let albedo = Color::random() * Color::random();
-                    let material = Arc::new(Lambertian::new(albedo));
+                    let material = Arc::new(Lambertian::from_albedo(albedo));
                     let end_center = center + Vec3::new(0.0, rng.random_range(0.0..0.5), 0.0);
                     world.add(Arc::new(Sphere::moving(center, end_center, 0.2, material)));
                 } else if choose_material < 0.95 {
@@ -88,7 +94,7 @@ fn build_scene() -> HittableList {
         1.0,
         material1,
     )));
-    let material2 = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    let material2 = Arc::new(Lambertian::from_albedo(Color::new(0.4, 0.2, 0.1)));
     world.add(Arc::new(Sphere::stationary(
         Point3::new(-4.0, 1.0, 0.0),
         1.0,
@@ -104,4 +110,24 @@ fn build_scene() -> HittableList {
     let mut scene = HittableList::new();
     scene.add(Arc::new(BVHNode::new(&mut world)));
     scene
+}
+
+fn checkered_spheres() -> HittableList {
+    let mut world = HittableList::new();
+    let checker = Arc::new(CheckerTexture::from_colors(
+        0.32,
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+    world.add(Arc::new(Sphere::stationary(
+        Point3::new(0.0, -10.0, 0.0),
+        10.0,
+        Arc::new(Lambertian::new(checker.clone())),
+    )));
+    world.add(Arc::new(Sphere::stationary(
+        Point3::new(0.0, 10.0, 0.0),
+        10.0,
+        Arc::new(Lambertian::new(checker)),
+    )));
+    world
 }

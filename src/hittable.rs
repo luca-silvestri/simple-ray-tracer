@@ -12,6 +12,8 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub material: Arc<dyn Material>,
     pub t: f64,
+    pub u: f64,
+    pub v: f64,
     pub front_face: bool,
 }
 
@@ -21,6 +23,8 @@ impl HitRecord {
         normal: Vec3,
         material: Arc<dyn Material>,
         t: f64,
+        u: f64,
+        v: f64,
         front_face: bool,
     ) -> Self {
         HitRecord {
@@ -28,6 +32,8 @@ impl HitRecord {
             normal,
             material,
             t,
+            u,
+            v,
             front_face,
         }
     }
@@ -53,10 +59,10 @@ mod tests {
     fn test_create() {
         let point = Point3::new(0.0, 1.0, 2.0);
         let normal = Vec3::new(1.0, 3.0, -1.0);
-        let material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(Lambertian::from_albedo(Color::new(0.5, 0.5, 0.5)));
         let t = 2.88;
         let front_face = false;
-        let record = HitRecord::new(point, normal, material, t, front_face);
+        let record = HitRecord::new(point, normal, material, t, 1.0, 2.0, front_face);
         assert_eq!(record.point, point);
         assert_eq!(record.normal, normal);
         assert_eq!(record.t, t);
