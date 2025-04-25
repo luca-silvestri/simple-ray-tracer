@@ -104,5 +104,4 @@ fn build_scene() -> HittableList {
     let mut scene = HittableList::new();
     scene.add(Arc::new(BVHNode::new(&mut world)));
     scene
-    // world
 }

@@ -15,6 +15,14 @@ impl AABB {
         AABB { x, y, z }
     }
 
+    pub fn empty() -> Self {
+        AABB {
+            x: Interval::empty(),
+            y: Interval::empty(),
+            z: Interval::empty(),
+        }
+    }
+
     pub fn union(&self, other: &AABB) -> Self {
         AABB {
             x: Interval::from_intervals(&self.x, &other.x),
@@ -30,6 +38,15 @@ impl AABB {
             y: make_interval(a.y, b.y),
             z: make_interval(a.z, b.z),
         }
+    }
+
+    pub fn longest_axis(&self) -> u8 {
+        [self.x.size(), self.y.size(), self.z.size()]
+            .iter()
+            .enumerate()
+            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .unwrap()
+            .0 as u8
     }
 
     pub fn hit(&self, ray: &Ray, t: &Interval) -> bool {

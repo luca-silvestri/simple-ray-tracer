@@ -1,7 +1,5 @@
 use std::{cmp::Ordering, sync::Arc};
 
-use rand::Rng;
-
 use crate::{
     aabb::AABB,
     hittable::{HitRecord, Hittable},
@@ -27,8 +25,13 @@ impl BVHNode {
         start: usize,
         end: usize,
     ) -> BVHNode {
-        let mut rng = rand::rng();
-        let comparator = match rng.random_range(0..3) {
+        let mut bbox = AABB::empty();
+        bbox = (start..end).fold(bbox, |bbox, index| {
+            bbox.union(objects[index].bounding_box())
+        });
+        let axis = bbox.longest_axis();
+
+        let comparator = match axis {
             0 => BVHNode::box_compare_x,
             1 => BVHNode::box_compare_y,
             _ => BVHNode::box_compare_z,
@@ -51,7 +54,7 @@ impl BVHNode {
                 right = Arc::new(BVHNode::from_hittable_list(objects, mid, end));
             }
         }
-        let bbox = left.bounding_box().union(right.bounding_box());
+
         BVHNode { left, right, bbox }
     }
 
