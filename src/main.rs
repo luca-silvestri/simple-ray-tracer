@@ -8,7 +8,6 @@ use std::{
 use dotenv::dotenv;
 use rand::Rng;
 
-use ray_tracer::hittable_list::HittableList;
 use ray_tracer::material::{Dielectric, Lambertian, Metal};
 use ray_tracer::sphere::Sphere;
 use ray_tracer::texture::CheckerTexture;
@@ -18,6 +17,7 @@ use ray_tracer::{
     camera::{Camera, CameraSettings},
 };
 use ray_tracer::{color::Color, texture::ImageTexture};
+use ray_tracer::{hittable_list::HittableList, texture::NoiseTexture};
 
 fn main() {
     dotenv().ok();
@@ -26,7 +26,8 @@ fn main() {
     let scene = match scene_choice {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
-        _ => earth(),
+        3 => earth(),
+        _ => perlin_spheres(),
     };
     let camera = build_camera();
     camera.render(&scene, &mut io::stdout());
@@ -144,5 +145,21 @@ fn earth() -> HittableList {
         earth_surface,
     ));
     world.add(globe);
+    world
+}
+
+fn perlin_spheres() -> HittableList {
+    let mut world = HittableList::new();
+    let perlin_texture = Arc::new(NoiseTexture::new(4.0));
+    world.add(Arc::new(Sphere::stationary(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Arc::new(Lambertian::new(perlin_texture.clone())),
+    )));
+    world.add(Arc::new(Sphere::stationary(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        Arc::new(Lambertian::new(perlin_texture)),
+    )));
     world
 }

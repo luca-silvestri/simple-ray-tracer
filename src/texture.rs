@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use image::{DynamicImage, GenericImageView, ImageReader};
 
-use crate::{color::Color, interval::Interval, vec3::Point3};
+use crate::{color::Color, interval::Interval, perlin::Perlin, vec3::Point3};
 
 pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, point: &Point3) -> Color;
@@ -93,5 +93,26 @@ impl Texture for ImageTexture {
             color_scale * pixel[1] as f64,
             color_scale * pixel[2] as f64,
         )
+    }
+}
+
+pub struct NoiseTexture {
+    noise: Perlin,
+    scale: f64,
+}
+
+impl NoiseTexture {
+    pub fn new(scale: f64) -> Self {
+        NoiseTexture {
+            noise: Perlin::new(),
+            scale,
+        }
+    }
+}
+
+impl Texture for NoiseTexture {
+    fn value(&self, _u: f64, _v: f64, point: &Point3) -> Color {
+        Color::new(0.5, 0.5, 0.5)
+            * (1.0 + (self.scale * point.z + 10.0 * self.noise.turbulence(point, 7)).sin())
     }
 }
