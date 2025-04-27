@@ -56,13 +56,17 @@ impl Vec3 {
     }
 
     pub fn random_unit_vector() -> Vec3 {
-        loop {
-            let candidate = Vec3::random();
-            let length = candidate.length_squared();
-            if 1e-160 < length && length <= 1.0 {
-                return candidate / length.sqrt();
-            }
-        }
+        let theta = rand::random::<f64>() * 2.0 * std::f64::consts::PI;
+        let z = rand::random::<f64>() * 2.0 - 1.0;
+        let r = (1.0 - z * z).sqrt();
+        Vec3::new(r * theta.cos(), r * theta.sin(), z)
+        // loop {
+        //     let candidate = Vec3::random();
+        //     let length = candidate.length_squared();
+        //     if 1e-160 < length && length <= 1.0 {
+        //         return candidate / length.sqrt();
+        //     }
+        // }
     }
 
     pub fn random_in_unit_disk() -> Vec3 {

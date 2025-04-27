@@ -67,15 +67,15 @@ impl Perlin {
     }
 
     fn perlin_interpolation(&self, c: [[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
-        let uu = u * u * (3.0 - 2.0 * u);
-        let vv = v * v * (3.0 - 2.0 * v);
-        let ww = w * w * (3.0 - 2.0 * w);
+        let fade = |t: f64| t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+        let uu = fade(u);
+        let vv = fade(v);
+        let ww = fade(w);
+        let lerp = |t: f64, a: usize| (a as f64 * t + (1 - a) as f64 * (1.0 - t));
         itertools::iproduct!(0..2, 0..2, 0..2)
             .map(|(i, j, k)| {
                 let weight_vector = Vec3::new(u - i as f64, v - j as f64, w - k as f64);
-                let weight_scalar = (i as f64 * uu + (1 - i) as f64 * (1.0 - uu))
-                    * (j as f64 * vv + (1 - j) as f64 * (1.0 - vv))
-                    * (k as f64 * ww + (1 - k) as f64 * (1.0 - ww));
+                let weight_scalar = lerp(uu, i) * lerp(vv, j) * lerp(ww, k);
                 weight_scalar * c[i][j][k].dot(&weight_vector)
             })
             .sum()
