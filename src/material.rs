@@ -7,12 +7,19 @@ use crate::{
     hittable::HitRecord,
     ray::Ray,
     texture::{SolidColor, Texture},
-    vec3::Vec3,
+    vec3::{Point3, Vec3},
 };
 
 pub trait Material: Send + Sync {
     fn scatter(&self, _ray_in: &Ray, _record: &HitRecord) -> Option<(Color, Ray)> {
         None
+    }
+    fn emitted(&self, _u: f64, _v: f64, _point: &Point3) -> Color {
+        Color {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
 }
 
@@ -107,5 +114,26 @@ impl Material for Dielectric {
         };
         let scattered = Ray::new(record.point, direction, ray_in.time());
         Some((attenuation, scattered))
+    }
+}
+
+pub struct DiffuseLight {
+    texture: Arc<dyn Texture>,
+}
+
+impl DiffuseLight {
+    pub fn new(texture: Arc<dyn Texture>) -> Self {
+        DiffuseLight { texture }
+    }
+
+    pub fn from_color(color: Color) -> Self {
+        let texture = Arc::new(SolidColor::new(color));
+        DiffuseLight { texture }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn emitted(&self, u: f64, v: f64, point: &Point3) -> Color {
+        self.texture.value(u, v, point)
     }
 }

@@ -1,17 +1,17 @@
 {
-  "aspect_ratio": 1.0,
+  "aspect_ratio": 1.777777777777,
   "image_width": 400,
   "samples_per_pixel": 10,
   "max_depth": 50,
-  "vertical_field_of_view": 80.0,
+  "vertical_field_of_view": 20.0,
   "lookfrom": {
-    "x": 0.0,
-    "y": 0.0,
-    "z": 9.0
+    "x": 26.0,
+    "y": 3.0,
+    "z": 6.0
   },
   "lookat": {
     "x": 0.0,
-    "y": 0.0,
+    "y": 2.0,
     "z": 0.0
   },
   "view_up": {
@@ -20,5 +20,10 @@
     "z": 0.0
   },
   "defocus_angle": 0.0,
-  "focus_distance": 10.0
+  "focus_distance": 10.0,
+  "background": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0
+  }
 }

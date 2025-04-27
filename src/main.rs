@@ -2,13 +2,13 @@ use std::{
     env,
     fs::File,
     io::{self, BufReader},
+    path::Path,
     sync::Arc,
 };
 
 use dotenv::dotenv;
 use rand::Rng;
 
-use ray_tracer::sphere::Sphere;
 use ray_tracer::texture::CheckerTexture;
 use ray_tracer::vec3::{Point3, Vec3};
 use ray_tracer::{
@@ -17,6 +17,7 @@ use ray_tracer::{
 };
 use ray_tracer::{color::Color, texture::ImageTexture};
 use ray_tracer::{hittable_list::HittableList, texture::NoiseTexture};
+use ray_tracer::{material::DiffuseLight, sphere::Sphere};
 use ray_tracer::{
     material::{Dielectric, Lambertian, Metal},
     quad::Quad,
@@ -25,20 +26,22 @@ use ray_tracer::{
 fn main() {
     dotenv().ok();
     let args: Vec<String> = env::args().collect();
-    let scene_choice: usize = args[1].parse().expect("Expected a number");
-    let scene = match scene_choice {
+    let choice: usize = args[1].parse().expect("Expected a number");
+    let scene = match choice {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
         4 => perlin_spheres(),
-        _ => quads(),
+        5 => quads(),
+        _ => simple_light(),
     };
-    let camera = build_camera();
+    let camera = build_camera(choice);
     camera.render(&scene, &mut io::stdout());
 }
 
-fn build_camera() -> Camera {
-    let settings_path = env::var("CAMERA_SETTINGS_PATH").unwrap();
+fn build_camera(choice: usize) -> Camera {
+    let settings_dir = env::var("CAMERA_SETTINGS_DIRECTORY").unwrap();
+    let settings_path = Path::new(&settings_dir).join(format!("{}.json", choice));
     let file = File::open(settings_path).unwrap();
     let reader = BufReader::new(file);
     let settings: CameraSettings = serde_json::from_reader(reader).unwrap();
@@ -53,6 +56,7 @@ fn build_camera() -> Camera {
         settings.view_up,
         settings.defocus_angle,
         settings.focus_distance,
+        settings.background,
     )
 }
 
@@ -205,5 +209,36 @@ fn quads() -> HittableList {
         Vec3::new(0.0, 0.0, -4.0),
         lower_teal,
     )));
+    world
+}
+
+fn simple_light() -> HittableList {
+    let mut world = HittableList::new();
+
+    let perlin_texture = Arc::new(NoiseTexture::new(4.0));
+    world.add(Arc::new(Sphere::stationary(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Arc::new(Lambertian::new(perlin_texture.clone())),
+    )));
+    world.add(Arc::new(Sphere::stationary(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        Arc::new(Lambertian::new(perlin_texture)),
+    )));
+
+    let diffuse_light = Arc::new(DiffuseLight::from_color(Color::new(4.0, 4.0, 4.0)));
+    world.add(Arc::new(Sphere::stationary(
+        Point3::new(0.0, 7.0, 0.0),
+        2.0,
+        diffuse_light.clone(),
+    )));
+    world.add(Arc::new(Quad::new(
+        Point3::new(3.0, 1.0, -2.0),
+        Vec3::new(2.0, 0.0, 0.0),
+        Vec3::new(0.0, 2.0, 0.0),
+        diffuse_light,
+    )));
+
     world
 }

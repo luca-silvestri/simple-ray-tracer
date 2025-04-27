@@ -27,6 +27,7 @@ pub struct CameraSettings {
     pub view_up: Vec3,
     pub defocus_angle: f64,
     pub focus_distance: f64,
+    pub background: Color,
 }
 
 pub struct Camera {
@@ -40,6 +41,7 @@ pub struct Camera {
     pub view_up: Vec3,
     pub defocus_angle: f64,
     pub focus_distance: f64,
+    pub background: Color,
     image_height: i32,
     center: Point3,
     pixel00_loc: Point3,
@@ -64,6 +66,7 @@ impl Camera {
         view_up: Vec3,
         defocus_angle: f64,
         focus_distance: f64,
+        background: Color,
     ) -> Self {
         let mut camera = Camera {
             aspect_ratio,
@@ -76,6 +79,7 @@ impl Camera {
             view_up,
             defocus_angle,
             focus_distance,
+            background,
             image_height: 0,
             center: Point3::default(),
             pixel00_loc: Point3::default(),
@@ -188,17 +192,19 @@ impl Camera {
             return Color::new(0.0, 0.0, 0.0);
         }
         match world.hit(ray, &Interval::new(0.001, f64::INFINITY)) {
-            Some(record) => match record.material.scatter(ray, &record) {
-                Some((attenuation, scattered_ray)) => {
-                    attenuation * self.ray_color(&scattered_ray, depth - 1, world)
+            Some(record) => {
+                let color_from_emission =
+                    record.material.emitted(record.u, record.v, &record.point);
+                match record.material.scatter(ray, &record) {
+                    Some((attenuation, scattered_ray)) => {
+                        let color_from_scatter =
+                            attenuation * self.ray_color(&scattered_ray, depth - 1, world);
+                        color_from_emission + color_from_scatter
+                    }
+                    None => color_from_emission,
                 }
-                None => Color::new(0.0, 0.0, 0.0),
-            },
-            None => {
-                let unit_direction = ray.direction().unit_vector();
-                let a = 0.5 * (unit_direction.y + 1.0);
-                (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
             }
+            None => self.background,
         }
     }
 }
