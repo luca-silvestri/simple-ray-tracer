@@ -12,7 +12,20 @@ pub struct AABB {
 
 impl AABB {
     pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
-        AABB { x, y, z }
+        AABB {
+            x: AABB::pad_to_minimum(x),
+            y: AABB::pad_to_minimum(y),
+            z: AABB::pad_to_minimum(z),
+        }
+    }
+
+    fn pad_to_minimum(interval: Interval) -> Interval {
+        let delta: f64 = 0.0001;
+        if interval.size() < delta {
+            interval.expand(delta)
+        } else {
+            interval
+        }
     }
 
     pub fn empty() -> Self {
@@ -33,11 +46,11 @@ impl AABB {
 
     pub fn from_extremes(a: &Point3, b: &Point3) -> Self {
         let make_interval = |a: f64, b: f64| Interval::new(a.min(b), a.max(b));
-        AABB {
-            x: make_interval(a.x, b.x),
-            y: make_interval(a.y, b.y),
-            z: make_interval(a.z, b.z),
-        }
+        AABB::new(
+            make_interval(a.x, b.x),
+            make_interval(a.y, b.y),
+            make_interval(a.z, b.z),
+        )
     }
 
     pub fn longest_axis(&self) -> u8 {

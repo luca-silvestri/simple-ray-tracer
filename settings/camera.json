@@ -1,13 +1,13 @@
 {
-  "aspect_ratio": 1.7777777777777777,
+  "aspect_ratio": 1.0,
   "image_width": 400,
   "samples_per_pixel": 10,
   "max_depth": 50,
-  "vertical_field_of_view": 20.0,
+  "vertical_field_of_view": 80.0,
   "lookfrom": {
-    "x": 13.0,
-    "y": 2.0,
-    "z": 3.0
+    "x": 0.0,
+    "y": 0.0,
+    "z": 9.0
   },
   "lookat": {
     "x": 0.0,

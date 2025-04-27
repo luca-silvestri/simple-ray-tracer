@@ -8,7 +8,6 @@ use std::{
 use dotenv::dotenv;
 use rand::Rng;
 
-use ray_tracer::material::{Dielectric, Lambertian, Metal};
 use ray_tracer::sphere::Sphere;
 use ray_tracer::texture::CheckerTexture;
 use ray_tracer::vec3::{Point3, Vec3};
@@ -18,6 +17,10 @@ use ray_tracer::{
 };
 use ray_tracer::{color::Color, texture::ImageTexture};
 use ray_tracer::{hittable_list::HittableList, texture::NoiseTexture};
+use ray_tracer::{
+    material::{Dielectric, Lambertian, Metal},
+    quad::Quad,
+};
 
 fn main() {
     dotenv().ok();
@@ -27,7 +30,8 @@ fn main() {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
-        _ => perlin_spheres(),
+        4 => perlin_spheres(),
+        _ => quads(),
     };
     let camera = build_camera();
     camera.render(&scene, &mut io::stdout());
@@ -160,6 +164,46 @@ fn perlin_spheres() -> HittableList {
         Point3::new(0.0, 2.0, 0.0),
         2.0,
         Arc::new(Lambertian::new(perlin_texture)),
+    )));
+    world
+}
+
+fn quads() -> HittableList {
+    let mut world = HittableList::new();
+    let left_red = Arc::new(Lambertian::from_albedo(Color::new(1.0, 0.2, 0.2)));
+    let back_green = Arc::new(Lambertian::from_albedo(Color::new(0.2, 1.0, 0.2)));
+    let right_blue = Arc::new(Lambertian::from_albedo(Color::new(0.2, 0.2, 1.0)));
+    let upper_orange = Arc::new(Lambertian::from_albedo(Color::new(1.0, 0.5, 0.0)));
+    let lower_teal = Arc::new(Lambertian::from_albedo(Color::new(0.2, 0.8, 0.8)));
+    world.add(Arc::new(Quad::new(
+        Point3::new(-3.0, -2.0, 5.0),
+        Vec3::new(0.0, 0.0, -4.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        left_red,
+    )));
+    world.add(Arc::new(Quad::new(
+        Point3::new(-2.0, -2.0, 0.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        back_green,
+    )));
+    world.add(Arc::new(Quad::new(
+        Point3::new(3.0, -2.0, 1.0),
+        Vec3::new(0.0, 0.0, 4.0),
+        Vec3::new(0.0, 4.0, 0.0),
+        right_blue,
+    )));
+    world.add(Arc::new(Quad::new(
+        Point3::new(-2.0, 3.0, 1.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 4.0),
+        upper_orange,
+    )));
+    world.add(Arc::new(Quad::new(
+        Point3::new(-2.0, -3.0, 5.0),
+        Vec3::new(4.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -4.0),
+        lower_teal,
     )));
     world
 }
