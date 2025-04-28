@@ -1,7 +1,7 @@
 {
   "aspect_ratio": 1.777777777777,
   "image_width": 400,
-  "samples_per_pixel": 10,
+  "samples_per_pixel": 100,
   "max_depth": 50,
   "vertical_field_of_view": 20.0,
   "lookfrom": {

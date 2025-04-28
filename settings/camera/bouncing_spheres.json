@@ -1,7 +1,7 @@
 {
   "aspect_ratio": 1.777777777777,
   "image_width": 400,
-  "samples_per_pixel": 10,
+  "samples_per_pixel": 200,
   "max_depth": 50,
   "vertical_field_of_view": 20.0,
   "lookfrom": {
@@ -19,7 +19,7 @@
     "y": 1.0,
     "z": 0.0
   },
-  "defocus_angle": 0.0,
+  "defocus_angle": 0.6,
   "focus_distance": 10.0,
   "background": {
     "x": 0.7,

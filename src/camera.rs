@@ -31,25 +31,16 @@ pub struct CameraSettings {
 }
 
 pub struct Camera {
-    pub aspect_ratio: f64,
-    pub image_width: i32,
-    pub samples_per_pixel: i32,
-    pub max_depth: i32,
-    pub vertical_field_of_view: f64,
-    pub lookfrom: Point3,
-    pub lookat: Point3,
-    pub view_up: Vec3,
-    pub defocus_angle: f64,
-    pub focus_distance: f64,
-    pub background: Color,
+    image_width: i32,
     image_height: i32,
+    samples_per_pixel: i32,
+    max_depth: i32,
+    defocus_angle: f64,
+    background: Color,
     center: Point3,
     pixel00_loc: Point3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
-    u: Vec3,
-    v: Vec3,
-    w: Vec3,
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
 }
@@ -68,60 +59,91 @@ impl Camera {
         focus_distance: f64,
         background: Color,
     ) -> Self {
-        let mut camera = Camera {
-            aspect_ratio,
-            image_width,
-            samples_per_pixel,
-            max_depth,
-            vertical_field_of_view,
-            lookfrom,
-            lookat,
-            view_up,
-            defocus_angle,
-            focus_distance,
-            background,
-            image_height: 0,
-            center: Point3::default(),
-            pixel00_loc: Point3::default(),
-            pixel_delta_u: Vec3::default(),
-            pixel_delta_v: Vec3::default(),
-            u: Vec3::default(),
-            v: Vec3::default(),
-            w: Vec3::default(),
-            defocus_disk_u: Vec3::default(),
-            defocus_disk_v: Vec3::default(),
-        };
-        camera.initialize();
-        camera
-    }
+        let image_height = cmp::max((image_width as f64 / aspect_ratio) as i32, 1);
 
-    fn initialize(&mut self) {
-        self.image_height = cmp::max((self.image_width as f64 / self.aspect_ratio) as i32, 1);
+        let center = lookfrom;
 
-        self.center = self.lookfrom;
-
-        let theta = self.vertical_field_of_view.to_radians();
+        let theta = vertical_field_of_view.to_radians();
         let h = f64::tan(theta / 2.0);
-        let viewport_height = 2.0 * h * self.focus_distance;
-        let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
+        let viewport_height = 2.0 * h * focus_distance;
+        let viewport_width = viewport_height * (image_width as f64 / image_height as f64);
 
-        self.w = (self.lookfrom - self.lookat).unit_vector();
-        self.u = self.view_up.cross(&self.w).unit_vector();
-        self.v = self.w.cross(&self.u);
+        let w = (lookfrom - lookat).unit_vector();
+        let u = view_up.cross(&w).unit_vector();
+        let v = w.cross(&u);
 
-        let viewport_u = viewport_width * self.u;
-        let viewport_v = viewport_height * -self.v;
-        self.pixel_delta_u = viewport_u / self.image_width as f64;
-        self.pixel_delta_v = viewport_v / self.image_height as f64;
+        let viewport_u = viewport_width * u;
+        let viewport_v = viewport_height * -v;
+        let pixel_delta_u = viewport_u / image_width as f64;
+        let pixel_delta_v = viewport_v / image_height as f64;
 
         let viewport_upper_left =
-            self.center - (self.focus_distance * self.w) - viewport_u / 2.0 - viewport_v / 2.0;
-        self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
+            center - (focus_distance * w) - viewport_u / 2.0 - viewport_v / 2.0;
+        let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-        let defocus_radius = self.focus_distance * (self.defocus_angle / 2.0).to_radians().tan();
-        self.defocus_disk_u = self.u * defocus_radius;
-        self.defocus_disk_v = self.v * defocus_radius;
+        let defocus_radius = focus_distance * (defocus_angle / 2.0).to_radians().tan();
+        let defocus_disk_u = u * defocus_radius;
+        let defocus_disk_v = v * defocus_radius;
+
+        Camera {
+            image_width,
+            image_height,
+            samples_per_pixel,
+            max_depth,
+            defocus_angle,
+            background,
+            center,
+            pixel00_loc,
+            pixel_delta_u,
+            pixel_delta_v,
+            defocus_disk_u,
+            defocus_disk_v,
+        }
     }
+
+    pub fn from_settings(settings: CameraSettings) -> Self {
+        Camera::new(
+            settings.aspect_ratio,
+            settings.image_width,
+            settings.samples_per_pixel,
+            settings.max_depth,
+            settings.vertical_field_of_view,
+            settings.lookfrom,
+            settings.lookat,
+            settings.view_up,
+            settings.defocus_angle,
+            settings.focus_distance,
+            settings.background,
+        )
+    }
+
+    // fn initialize(&mut self) {
+    //     self.image_height = cmp::max((self.image_width as f64 / self.aspect_ratio) as i32, 1);
+    //
+    //     self.center = self.lookfrom;
+    //
+    //     let theta = self.vertical_field_of_view.to_radians();
+    //     let h = f64::tan(theta / 2.0);
+    //     let viewport_height = 2.0 * h * self.focus_distance;
+    //     let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
+    //
+    //     self.w = (self.lookfrom - self.lookat).unit_vector();
+    //     self.u = self.view_up.cross(&self.w).unit_vector();
+    //     self.v = self.w.cross(&self.u);
+    //
+    //     let viewport_u = viewport_width * self.u;
+    //     let viewport_v = viewport_height * -self.v;
+    //     self.pixel_delta_u = viewport_u / self.image_width as f64;
+    //     self.pixel_delta_v = viewport_v / self.image_height as f64;
+    //
+    //     let viewport_upper_left =
+    //         self.center - (self.focus_distance * self.w) - viewport_u / 2.0 - viewport_v / 2.0;
+    //     self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
+    //
+    //     let defocus_radius = self.focus_distance * (self.defocus_angle / 2.0).to_radians().tan();
+    //     self.defocus_disk_u = self.u * defocus_radius;
+    //     self.defocus_disk_v = self.v * defocus_radius;
+    // }
 
     pub fn render<W: Write>(&self, world: &(impl Hittable + Send + Sync), out: &mut W) {
         let progress_bar = self.get_progress_bar();
