@@ -117,34 +117,6 @@ impl Camera {
         )
     }
 
-    // fn initialize(&mut self) {
-    //     self.image_height = cmp::max((self.image_width as f64 / self.aspect_ratio) as i32, 1);
-    //
-    //     self.center = self.lookfrom;
-    //
-    //     let theta = self.vertical_field_of_view.to_radians();
-    //     let h = f64::tan(theta / 2.0);
-    //     let viewport_height = 2.0 * h * self.focus_distance;
-    //     let viewport_width = viewport_height * (self.image_width as f64 / self.image_height as f64);
-    //
-    //     self.w = (self.lookfrom - self.lookat).unit_vector();
-    //     self.u = self.view_up.cross(&self.w).unit_vector();
-    //     self.v = self.w.cross(&self.u);
-    //
-    //     let viewport_u = viewport_width * self.u;
-    //     let viewport_v = viewport_height * -self.v;
-    //     self.pixel_delta_u = viewport_u / self.image_width as f64;
-    //     self.pixel_delta_v = viewport_v / self.image_height as f64;
-    //
-    //     let viewport_upper_left =
-    //         self.center - (self.focus_distance * self.w) - viewport_u / 2.0 - viewport_v / 2.0;
-    //     self.pixel00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
-    //
-    //     let defocus_radius = self.focus_distance * (self.defocus_angle / 2.0).to_radians().tan();
-    //     self.defocus_disk_u = self.u * defocus_radius;
-    //     self.defocus_disk_v = self.v * defocus_radius;
-    // }
-
     pub fn render<W: Write>(&self, world: &(impl Hittable + Send + Sync), out: &mut W) {
         let progress_bar = self.get_progress_bar();
         let pixels = (0..self.image_height)
